@@ -8,6 +8,7 @@
 
 class UBoxComponent;
 class UDecalComponent;
+
 UCLASS()
 class FPSGAME_API AFPSExtractionZone : public AActor
 {
@@ -17,14 +18,18 @@ public:
 	// Sets default values for this actor's properties
 	AFPSExtractionZone();
 
-	UPROPERTY(VisibleAnywhere, Category = "Gameplay")
+	UPROPERTY(VisibleAnywhere, Category = "Comp")
     UBoxComponent* OverlapComp;
 
-	UPROPERTY(VisibleAnywhere, Category = "Gameplay")
+	UPROPERTY(VisibleAnywhere, Category = "Comp")
     UDecalComponent* DecalComp;
 
 protected:
 
 	UFUNCTION()
 	void HandleOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
+	UPROPERTY(EditDefaultsOnly, Category = "Sounds")
+	USoundBase* ObjectiveMissingSound;
+
 };

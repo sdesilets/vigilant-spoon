@@ -1,8 +1,12 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "FPSExtractionZone.h"
+#include "FPSCharacter.h"
+#include "FPSGameMode.h"
 #include "Components/BoxComponent.h"
 #include "Components/DecalComponent.h"
+#include "Components/ActorComponent.h"
+#include "Kismet/GameplayStatics.h"
 
 
 // Sets default values
@@ -18,12 +22,30 @@ AFPSExtractionZone::AFPSExtractionZone()
 	RootComponent = OverlapComp;
 
 	DecalComp = CreateDefaultSubobject<UDecalComponent>(TEXT("DecalComp"));
-	DecalComp->DecalSize = OverlapComp->GetScaledBoxExtent();
+	DecalComp->DecalSize = FVector(200.f);
+	DecalComp->SetupAttachment(OverlapComp);
 
 	OverlapComp->OnComponentBeginOverlap.AddDynamic(this, &AFPSExtractionZone::HandleOverlap);
 }
 
 void AFPSExtractionZone::HandleOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	UE_LOG(LogTemp, Log, TEXT("Hi!"));
+	AFPSCharacter* player = Cast<AFPSCharacter>(OtherActor);
+
+	if (!player)
+	{
+		return;
+	}
+	if (player->IsCarryingObjective)
+	{
+		AFPSGameMode* gameMode = Cast<AFPSGameMode>(GetWorld()->GetAuthGameMode());
+		if (gameMode)
+		{
+			gameMode->CompleteMission(player);
+		}
+	}
+	else
+	{
+		UGameplayStatics::PlaySound2D(this, ObjectiveMissingSound);
+	}
 }
