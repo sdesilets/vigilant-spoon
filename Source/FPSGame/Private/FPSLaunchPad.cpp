@@ -1,27 +1,41 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "FPSLaunchPad.h"
+#include "Components/BoxComponent.h"
+#include "FPSCharacter.h"
+#include "Components/StaticMeshComponent.h"
 
 
 // Sets default values
 AFPSLaunchPad::AFPSLaunchPad()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+	TriggerZone = CreateDefaultSubobject<UBoxComponent>(TEXT("Trigger Zone"));
+	TriggerZone->SetBoxExtent(FVector(75, 75, 50));
+	RootComponent = TriggerZone;
+	TriggerZone->OnComponentBeginOverlap.AddDynamic(this, &AFPSLaunchPad::HandleOverlap);
 
+	LaunchPadMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Launch Pad"));
+	LaunchPadMesh->SetupAttachment(RootComponent);
+
+	LaunchAngle = 75.0f;
+	LaunchStrength = 2000.0f;
 }
 
-// Called when the game starts or when spawned
-void AFPSLaunchPad::BeginPlay()
+void AFPSLaunchPad::HandleOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	Super::BeginPlay();
-	
-}
+	FRotator launchPadRotator = GetActorRotation();
+	launchPadRotator.Pitch = LaunchAngle;
+	FVector launchVelocity = launchPadRotator.Vector() * LaunchStrength;
 
-// Called every frame
-void AFPSLaunchPad::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
+	AFPSCharacter* player = Cast<AFPSCharacter>(OtherActor);
 
+	if (player)
+	{
+		player->LaunchCharacter(launchVelocity, true, true);
+	}
+	else if (OtherComp && OtherComp->IsSimulatingPhysics())
+	{
+		OtherComp->AddImpulse(launchVelocity, NAME_None, true);
+	}
 }
 
